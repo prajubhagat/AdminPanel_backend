@@ -1,156 +1,83 @@
+
 var express = require('express');
 const mysql = require('mysql2');
-
 var router = express.Router();
 var app = express();
+const ObjectId = require("mongodb").ObjectId;
+
+var MongoClient = require("mongodb").MongoClient;
+
+const uri =
+"mongodb+srv://prajubhagat10:E8Oqv5DIGZpFkwEL@praju.pnnbnzy.mongodb.net/testdb?retryWrites=true&w=majority&appName=Praju";
+
+const client = new MongoClient(uri);
 
 
-  router.get('/',function(req, res){
-    var con = mysql.createConnection({
-      host: "localhost",
-      user: "root",
-      password: "praju@1234",
-      database: "cart_app"
-    });  
-    
-    
-    con.connect(function(err) {
-          if (err) throw err;
-          con.query("SELECT * FROM users", function (err, result, fields) {
-            if (err) throw err;
-            console.log(result);
-            res.json(result);
-          });
-        });
-     
+  router.get('/', async function (req, res){
+
+    let dbo = await client.db("testdb");
+    let data = await dbo.collection("customers").find({}).sort({ name: 1, age: 1 }).toArray();
+    console.log("data >> ", data);
+    res.json(data);
    });
 
 
-router.post('/',function(req, res){
-  var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "praju@1234",
-    database: "cart_app"
-  });  
+router.post('/', async function(req, res){
+
+  let dbo = await client.db("testdb");
+  var myobj = req.body;
+  let data = await dbo.collection("customers").insertOne(myobj);
+  console.log(data);
+
   
   console.log(req.body);
-
   const user= req.body;
-  
-
-
-  con.connect(function(err) {
-    if (err) throw err;
-    console.log("Connected!");
-    var sql = 
-    `INSERT INTO users (username, password, email, first_name, last_name)  
-    VALUES ('${user.username}',
-    '${user.password}',
-    '${user.email}',
-    '${user.first_name}',
-    '${user.last_name}') `;
-    con.query(sql, function (err, result) {
-      if (err) throw err;
-      console.log("1 record inserted");
-      res.json({message:"1 record inserted"})
-    });
-   
-  })
-  // con.connect(function(err) {
-  //       if (err) throw err;
-  //       con.query("SELECT * FROM users", function (err, result, fields) {
-  //         if (err) throw err;
-  //         console.log(result);
-  //         res.json(result);
-  //       });
-  //     });
-   
- });
-
-
- router.get('/:id', function(req, res){
- console.log ("I am id=" + req.params.id);
-
-
- var con = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "praju@1234",
-  database: "cart_app"
-});  
-
-
-con.connect(function(err) {
-      if (err) throw err;
-      con.query(`SELECT * FROM users where id=${req.params.id}`, function (err, result, fields) 
-      {
-        if (err) throw err;
-        console.log(result);
-        res.json(result[0]);
-      });
-    
- 
+  res.json({message:"1 record inserted"});
 });
+
+
+ router.get('/:id', async function(req, res){
+  console.log("I am id = " + req.params.id);
+
+  let dbo = await client.db("testdb");
+  let data = await dbo.collection("customers").find({_id: new ObjectId("" + req.params.id + "")}).toArray();
+  console.log("data >> ", data);
+  res.json(data[0]);
 
 });
 
 
-router.put('/:id',function(req, res){
-  var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "praju@1234",
-    database: "cart_app"
-  });  
-  
-  console.log(req.body);
+router.put('/:id', async function(req, res){
+  console.log("I am id = " + req.params.id);
 
+  let dbo = await client.db("testdb");
+  var myquery = { _id: new ObjectId(req.params.id) };
+  var newvalues = { $set: req.body };
+  let data = await dbo.collection("customers").updateOne(myquery, newvalues);
+  console.log("data >> ", data);
+  res.json({message:"1 record inserted"});
+ 
+  console.log(req.body);
   const user= req.body;
   
-  con.connect(function(err) {
-    if (err) throw err;
-    console.log("Connected!");
-    var sql = `UPDATE users set 
-    username='${user.username}',
-     password= '${user.password}', 
-     email='${user.email}', 
-     first_name='${user.first_name}'
-     where id=${req.params.id}`;
-    con.query(sql, function (err, result) {
-      if (err) throw err;
-      console.log("1 record inserted");
-      res.json({message:"1 record inserted"})
-    });
-   
  
-  });  
  });
 
 
- router.delete('/:id', function(req, res){
+ router.delete('/:id', async function(req, res){
   console.log ("I am id=" + req.params.id);
+
+  let dbo = await client.db("testdb");
+  //delete one
+  let data = await dbo.collection("customers").deleteOne({ username: "praju11"});
+  // let data = await dbo.collection("customers").drop();
+  console.log("data >> ", data);
  
- 
-  var con = mysql.createConnection({
-   host: "localhost",
-   user: "root",
-   password: "praju@1234",
-   database: "cart_app"
- });  
- 
- 
- con.connect(function(err) {
-       if (err) throw err;
-       con.query(`DELETE FROM users where id=${req.params.id}`, function (err, result, fields) 
-       {
-         if (err) throw err;
-         console.log(result);
+  console.log(data);
          res.json({message: "User Deleted"});
-       });
-     
-  
- });
+   
+ 
+ 
  
  });
 
