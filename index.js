@@ -19,10 +19,13 @@ app.options("*",cors());
 //Require the Router we defined in movies.js
 var movies = require('./movies.js');
 var users = require('./users.js');
+var rooms = require('./rooms.js');
 
 //Use the Router on the sub route /movies
 app.use('/movies', movies);
 app.use('/users',users);
+app.use('/rooms',rooms);
+
 // app.use(cors());
 
 app.listen(3001);
